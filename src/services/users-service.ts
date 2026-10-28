@@ -14,6 +14,12 @@ export class InvalidCredentialsError extends Error {
   }
 }
 
+export class UnauthorizedError extends Error {
+  constructor() {
+    super("Unauthorized");
+  }
+}
+
 export async function registerUser(input: {
   name: string;
   email: string;
@@ -39,4 +45,20 @@ export async function loginUser(input: { email: string; password: string }) {
   const token = crypto.randomUUID();
   await db.insert(sessions).values({ token, userId: user.id });
   return token;
+}
+
+export async function getCurrentUser(token: string) {
+  const [user] = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      created_at: users.createdAt,
+    })
+    .from(sessions)
+    .innerJoin(users, eq(sessions.userId, users.id))
+    .where(eq(sessions.token, token));
+  if (!user) throw new UnauthorizedError();
+
+  return user;
 }
