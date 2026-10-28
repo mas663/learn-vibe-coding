@@ -35,6 +35,7 @@ Setelah mengubah schema: `bun run db:generate`, lalu `bun run db:migrate`.
 | GET    | `/health`    | Health check                        |
 | POST   | `/api/users` | Registrasi user baru (lihat di bawah) |
 | POST   | `/api/users/login` | Login user (lihat di bawah) |
+| GET    | `/api/users/current` | Data user yang sedang login (lihat di bawah) |
 
 ### POST /api/users
 
@@ -76,6 +77,33 @@ Response jika email tidak terdaftar atau password salah (401):
 
 ```json
 { "error": "Email atau password salah" }
+```
+
+### GET /api/users/current
+
+Header (token didapat dari login):
+
+```
+Authorization: Bearer <token>
+```
+
+Response sukses (200):
+
+```json
+{
+  "data": {
+    "id": 1,
+    "name": "Mohammad Affan Shofi",
+    "email": "affan@example.com",
+    "created_at": "2026-10-28T15:25:45.000Z"
+  }
+}
+```
+
+Response jika header tidak ada, formatnya salah, atau token tidak dikenal (401):
+
+```json
+{ "error": "Unauthorized" }
 ```
 
 ## Struktur
