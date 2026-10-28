@@ -5,8 +5,14 @@ import {
   UnauthorizedError,
   getCurrentUser,
   loginUser,
+  logoutUser,
   registerUser,
 } from "../services/users-service";
+
+function getBearerToken(authorization: string | undefined) {
+  if (!authorization?.startsWith("Bearer ")) return null;
+  return authorization.slice("Bearer ".length);
+}
 
 export const usersRoute = new Elysia({ prefix: "/api/users" })
   .post(
@@ -50,13 +56,25 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
     },
   )
   .get("/current", async ({ headers, status }) => {
-    const authorization = headers.authorization;
-    if (!authorization?.startsWith("Bearer ")) {
-      return status(401, { error: "Unauthorized" });
-    }
+    const token = getBearerToken(headers.authorization);
+    if (!token) return status(401, { error: "Unauthorized" });
 
     try {
-      return { data: await getCurrentUser(authorization.slice("Bearer ".length)) };
+      return { data: await getCurrentUser(token) };
+    } catch (e) {
+      if (e instanceof UnauthorizedError) {
+        return status(401, { error: e.message });
+      }
+      throw e;
+    }
+  })
+  .delete("/logout", async ({ headers, status }) => {
+    const token = getBearerToken(headers.authorization);
+    if (!token) return status(401, { error: "Unauthorized" });
+
+    try {
+      await logoutUser(token);
+      return { data: "OK" };
     } catch (e) {
       if (e instanceof UnauthorizedError) {
         return status(401, { error: e.message });
