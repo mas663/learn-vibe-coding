@@ -10,8 +10,7 @@ import {
 } from "../services/users-service";
 
 function getBearerToken(authorization: string | undefined) {
-  if (!authorization?.startsWith("Bearer ")) return null;
-  return authorization.slice("Bearer ".length);
+  return authorization?.match(/^Bearer (.+)$/i)?.[1] ?? null;
 }
 
 export const usersRoute = new Elysia({ prefix: "/api/users" })
