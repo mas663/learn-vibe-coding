@@ -5,22 +5,33 @@ import {
   UnauthorizedError,
   getCurrentUser,
   loginUser,
+  logoutUser,
   registerUser,
 } from "../services/users-service";
 
+function getBearerToken(authorization: string | undefined) {
+  const token = authorization?.match(/^Bearer (.+)$/i)?.[1];
+  if (!token) throw new UnauthorizedError();
+  return token;
+}
+
 export const usersRoute = new Elysia({ prefix: "/api/users" })
+  .onError(({ error, status }) => {
+    if (error instanceof EmailAlreadyRegisteredError) {
+      return status(400, { error: error.message });
+    }
+    if (
+      error instanceof InvalidCredentialsError ||
+      error instanceof UnauthorizedError
+    ) {
+      return status(401, { error: error.message });
+    }
+  })
   .post(
     "/",
-    async ({ body, status }) => {
-      try {
-        await registerUser(body);
-        return { data: "OK" };
-      } catch (e) {
-        if (e instanceof EmailAlreadyRegisteredError) {
-          return status(400, { error: e.message });
-        }
-        throw e;
-      }
+    async ({ body }) => {
+      await registerUser(body);
+      return { data: "OK" };
     },
     {
       body: t.Object({
@@ -30,37 +41,16 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
       }),
     },
   )
-  .post(
-    "/login",
-    async ({ body, status }) => {
-      try {
-        return { data: await loginUser(body) };
-      } catch (e) {
-        if (e instanceof InvalidCredentialsError) {
-          return status(401, { error: e.message });
-        }
-        throw e;
-      }
-    },
-    {
-      body: t.Object({
-        email: t.String({ minLength: 1 }),
-        password: t.String({ minLength: 1 }),
-      }),
-    },
-  )
-  .get("/current", async ({ headers, status }) => {
-    const authorization = headers.authorization;
-    if (!authorization?.startsWith("Bearer ")) {
-      return status(401, { error: "Unauthorized" });
-    }
-
-    try {
-      return { data: await getCurrentUser(authorization.slice("Bearer ".length)) };
-    } catch (e) {
-      if (e instanceof UnauthorizedError) {
-        return status(401, { error: e.message });
-      }
-      throw e;
-    }
+  .post("/login", async ({ body }) => ({ data: await loginUser(body) }), {
+    body: t.Object({
+      email: t.String({ minLength: 1 }),
+      password: t.String({ minLength: 1 }),
+    }),
+  })
+  .get("/current", async ({ headers }) => ({
+    data: await getCurrentUser(getBearerToken(headers.authorization)),
+  }))
+  .delete("/logout", async ({ headers }) => {
+    await logoutUser(getBearerToken(headers.authorization));
+    return { data: "OK" };
   });

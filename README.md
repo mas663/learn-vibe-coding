@@ -36,6 +36,7 @@ Setelah mengubah schema: `bun run db:generate`, lalu `bun run db:migrate`.
 | POST   | `/api/users` | Registrasi user baru (lihat di bawah) |
 | POST   | `/api/users/login` | Login user (lihat di bawah) |
 | GET    | `/api/users/current` | Data user yang sedang login (lihat di bawah) |
+| DELETE | `/api/users/logout` | Logout user (lihat di bawah) |
 
 ### POST /api/users
 
@@ -98,6 +99,26 @@ Response sukses (200):
     "created_at": "2026-10-28T15:25:45.000Z"
   }
 }
+```
+
+Response jika header tidak ada, formatnya salah, atau token tidak dikenal (401):
+
+```json
+{ "error": "Unauthorized" }
+```
+
+### DELETE /api/users/logout
+
+Header (token didapat dari login):
+
+```
+Authorization: Bearer <token>
+```
+
+Response sukses (200), session dengan token tersebut dihapus dari tabel `sessions`:
+
+```json
+{ "data": "OK" }
 ```
 
 Response jika header tidak ada, formatnya salah, atau token tidak dikenal (401):
