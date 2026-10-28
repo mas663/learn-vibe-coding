@@ -30,14 +30,32 @@ Setelah mengubah schema: `bun run db:generate`, lalu `bun run db:migrate`.
 
 ## Endpoint
 
-| Method | Path         | Keterangan          |
-| ------ | ------------ | ------------------- |
-| GET    | `/health`    | Health check        |
-| GET    | `/users`     | Daftar user         |
-| GET    | `/users/:id` | Detail user         |
-| POST   | `/users`     | Buat user (`name`, `email`) |
-| PUT    | `/users/:id` | Ubah user           |
-| DELETE | `/users/:id` | Hapus user          |
+| Method | Path         | Keterangan                          |
+| ------ | ------------ | ----------------------------------- |
+| GET    | `/health`    | Health check                        |
+| POST   | `/api/users` | Registrasi user baru (lihat di bawah) |
+
+### POST /api/users
+
+Request:
+
+```json
+{ "name": "Mohammad Affan Shofi", "email": "affan@example.com", "password": "rahasia" }
+```
+
+Response sukses (200):
+
+```json
+{ "data": "OK" }
+```
+
+Response jika email sudah terdaftar (400):
+
+```json
+{ "error": "Email sudah terdaftar" }
+```
+
+Password disimpan sebagai hash bcrypt.
 
 ## Struktur
 
@@ -45,6 +63,7 @@ Setelah mengubah schema: `bun run db:generate`, lalu `bun run db:migrate`.
 src/
   index.ts      # entry point server Elysia
   db/           # koneksi Drizzle dan schema
-  routes/       # route per fitur
+  routes/       # routing Elysia (users-route.ts)
+  services/     # logic bisnis (users-service.ts)
 drizzle/        # file migrasi hasil generate
 ```
