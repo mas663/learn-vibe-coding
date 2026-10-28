@@ -34,6 +34,7 @@ Setelah mengubah schema: `bun run db:generate`, lalu `bun run db:migrate`.
 | ------ | ------------ | ----------------------------------- |
 | GET    | `/health`    | Health check                        |
 | POST   | `/api/users` | Registrasi user baru (lihat di bawah) |
+| POST   | `/api/users/login` | Login user (lihat di bawah) |
 
 ### POST /api/users
 
@@ -56,6 +57,26 @@ Response jika email sudah terdaftar (400):
 ```
 
 Password disimpan sebagai hash bcrypt.
+
+### POST /api/users/login
+
+Request:
+
+```json
+{ "email": "affan@example.com", "password": "rahasia" }
+```
+
+Response sukses (200), berisi token UUID yang disimpan di tabel `sessions`:
+
+```json
+{ "data": "3f1c2a9e-8b7d-4e6f-a1b2-c3d4e5f6a7b8" }
+```
+
+Response jika email tidak terdaftar atau password salah (401):
+
+```json
+{ "error": "Email atau password salah" }
+```
 
 ## Struktur
 
